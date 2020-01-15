@@ -65,6 +65,9 @@ public class MaccaLift {
         double error = desiredPosition - getLiftPosition();
         lift_right.setPower(kP*error);
         lift_left.setPower(kP*error);
+
+        parentOpMode.telemetry.addData("lift power", kP*error) ;
+        parentOpMode.telemetry.update();
     }
 
     public void runRack(double rate) {
@@ -75,9 +78,9 @@ public class MaccaLift {
         if (open && closed) {
             chad.setPosition(chad.getPosition());
         } else if (closed) {
-            chad.setPosition(0);
+            chad.setPosition(0.15);
         } else if (open) {
-            chad.setPosition(1);
+            chad.setPosition(0.23);
         }
     }
 
