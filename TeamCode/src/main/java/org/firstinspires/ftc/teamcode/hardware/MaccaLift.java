@@ -17,7 +17,7 @@ public class MaccaLift {
     private OpMode parentOpMode;
     private HardwareMap hardwareMap;
 
-    private DcMotorEx lift_left, lift_right;
+    private DcMotor lift_left, lift_right;
     private CRServo rack;
     private Servo chad;
     private double liftTargetPos;
