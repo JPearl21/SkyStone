@@ -23,6 +23,7 @@ public class ConceptMaccaDriveAuto extends LinearOpMode {
 
         robot = new MaccabotV2(this);
         robot.initialize(true);
+        telemetry.addData("Orientation", robot.drive.getOrientation());
         telemetry.update();
         mp.start();
 
@@ -35,14 +36,12 @@ public class ConceptMaccaDriveAuto extends LinearOpMode {
         robot.drive.composeTelemetry(MaccaDrive.TelemetryLevel.FULL);
         telemetry.update();
 
-        robot.drive.setTargetsTicks(1000, 1000);
-        telemetry.addLine("Targets set.");
-        telemetry.update();
+        robot.drive.setTargetsTicks(MaccaDrive.inchesToEncoderTicks(24), MaccaDrive.inchesToEncoderTicks(24));
+        robot.drive.runToTargets(0.9, 0.9);
         while (opModeIsActive() && robot.drive.isDriveBusy()) {
             telemetry.update();
-            robot.drive.runToTargets(1500, 1500);
         }
-        robot.drive.setMotorPowers(0, 0, 0, 0);
+
         telemetry.addLine("Target achieved. All clear!");
         telemetry.update();
         sleep(5000);

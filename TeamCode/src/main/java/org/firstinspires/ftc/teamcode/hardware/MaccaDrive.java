@@ -42,8 +42,8 @@ public class MaccaDrive {
     private OpMode parentOpMode;
     private HardwareMap hardwareMap;
 
-    private DcMotorEx front_left, front_right, back_left, back_right;
-    private List<DcMotorEx> driveMotors;
+    private DcMotor front_left, front_right, back_left, back_right;
+    private List<DcMotor> driveMotors;
     private BNO055IMU imu;
 
     private boolean isGyroTurnBusy;
@@ -103,18 +103,16 @@ public class MaccaDrive {
         driveMotors.get(3).setDirection(DcMotorSimple.Direction.REVERSE);
 
         // When the motors stop, they need to really stop.
-        for (DcMotorEx motor : driveMotors) {
+        for (DcMotor motor : driveMotors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
 
         setMotorModes(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Clears encoders from previous runs
         // runToPosition() is used for auto navigation and velocity PID smooths teleop driving
         if (isAuto) {
-            setTargetsTicks(0, 0);
-            setMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
+            setMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
             // PID coefficients need to be tuned when major hardware changes are made.
             // TODO tune coefficients for MaccaDrive
-            setCoefficients(velocity_kP, velocity_kI, velocity_kD, velocity_kF, position_kP);
         } else { setMotorModes(DcMotor.RunMode.RUN_USING_ENCODER); }
         // Initialize IMU if in AUTO mode
         if (isAuto) {
@@ -145,29 +143,9 @@ public class MaccaDrive {
      * @param mode the mode to which the drive motors should be set
      */
     private void setMotorModes(DcMotorEx.RunMode mode) {
-        for (DcMotorEx motor : driveMotors) {
+        for (DcMotor motor : driveMotors) {
             motor.setMode(mode);
         }
-    }
-    /***
-     * Sets the coefficients of the internal velocity and position PIDF control loops. These
-     * values are found through experimentation and can be easily tuned using the FTC dashboard.
-     *
-     * @param v_kP Velocity Proportional Constant (normally between 20 and 40)
-     * @param v_kI Velocity Integral Constant (normally 0)
-     * @param v_kD Velocity Derivative Constant (normally between 10 and 20)
-     * @param v_kF Velocity FeedForward Constant (normally between 10 and 15)
-     * @param p_kP Position Proportional Constant
-     */
-    private void setCoefficients(double v_kP, double v_kI, double v_kD, double v_kF, double p_kP) {
-        for (DcMotorEx motor : driveMotors) {
-            motor.setVelocityPIDFCoefficients(v_kP, v_kI, v_kD, v_kF);
-            motor.setPositionPIDFCoefficients(p_kP);
-        }
-    }
-
-    public void updateCoefficientsFromConfigutation() {
-        setCoefficients(velocity_kP, velocity_kI, velocity_kD, velocity_kF, position_kP);
     }
 
     /**
@@ -186,6 +164,10 @@ public class MaccaDrive {
         globalAngle += deltaAngle; // integrates the delta logic into the final angle
         lastAngles = angles;
         return globalAngle;
+    }
+
+    public Pair<Integer, Integer> getEncoderCounts() {
+        return new Pair<>(driveMotors.get(0).getTargetPosition(), driveMotors.get(2).getTargetPosition());
     }
 
     /* *********
@@ -275,12 +257,13 @@ public class MaccaDrive {
         driveMotors.get(2).setPower(blPower);
         driveMotors.get(3).setPower(brPower);
     }
+    public void setMotorPowers(double power) { setMotorPowers(power,power,power,power); }
 
     /***
      * Stops the motors hard. Use in emergencies.
      */
     public void emergencyStop() {
-        for (DcMotorEx motor : driveMotors) {
+        for (DcMotor motor : driveMotors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         setMotorPowers(0,0,0,0);
@@ -310,20 +293,36 @@ public class MaccaDrive {
      * AUTONOMOUS DRIVING METHODS
      ****************************/
 
+    public void resetMotorEncoders() {
+        setMotorModes(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    public void propRunToTargetLine(int target) {
+        double error = target - driveMotors.get(0).getCurrentPosition();
+
+        if (error > 0) {
+            setMotorPowers(error * 2.75);
+            isGyroTurnBusy = true;
+        } else {
+            isGyroTurnBusy = false;
+            setMotorPowers(0);
+        }
+    }
+
     /**
      * Sets the targets for each side of the drivetrain in encoder ticks.
      * @param leftTarget Left Target in Encoder Ticks
      * @param rightTarget Right Target in Encoder Ticks
      */
     public void setTargetsTicks(int leftTarget, int rightTarget) {
-        setMotorModes(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         parentOpMode.telemetry.addData("Setting Left Target: ", leftTarget);
         parentOpMode.telemetry.addData("Setting Right Target: ", rightTarget);
         parentOpMode.telemetry.update();
-        driveMotors.get(0).setTargetPosition(leftTarget);
-        driveMotors.get(2).setTargetPosition(leftTarget);
-        driveMotors.get(1).setTargetPosition(rightTarget);
-        driveMotors.get(3).setTargetPosition(rightTarget);
+        driveMotors.get(0).setTargetPosition(driveMotors.get(0).getCurrentPosition() + leftTarget);
+        driveMotors.get(2).setTargetPosition(driveMotors.get(1).getCurrentPosition() + leftTarget);
+        driveMotors.get(1).setTargetPosition(driveMotors.get(0).getCurrentPosition() + rightTarget);
+        driveMotors.get(3).setTargetPosition(driveMotors.get(0).getCurrentPosition() + rightTarget);
         setMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
     }
     /**
@@ -338,14 +337,17 @@ public class MaccaDrive {
      * Runs the motors to their target at the given velocity. When turning around center or driving
      * straight, the two parameters should be the same. They should only be different when driving
      * in an arc. Remember that movement in reverse requires negative velocities.
-     * @param velocityLeft Drive Left Side Velocity (encoder ticks per second)
-     * @param velocityRight Drive Right Side Velocity (encoder ticks per second)
+     * @param velocityLeft Drive Left Side Velocity (0 to 1)
+     * @param velocityRight Drive Right Side Velocity (0 to 1)
      */
     public void runToTargets(double velocityLeft, double velocityRight) {
-        driveMotors.get(0).setVelocity(velocityLeft);
-        driveMotors.get(2).setVelocity(velocityLeft);
-        driveMotors.get(1).setVelocity(velocityRight);
-        driveMotors.get(3).setVelocity(velocityRight);
+        if (Math.abs(driveMotors.get(0).getTargetPosition() - driveMotors.get(0).getCurrentPosition()) > 5 &&
+                Math.abs(driveMotors.get(1).getTargetPosition() - driveMotors.get(0).getCurrentPosition()) > 5) {
+            driveMotors.get(0).setPower(velocityLeft);
+            driveMotors.get(2).setPower(velocityLeft);
+            driveMotors.get(1).setPower(velocityRight);
+            driveMotors.get(3).setPower(velocityRight);
+        } else setMotorPowers(0);
     }
 
     public void runToTargetsInches(double velocityInchesLeft, double velocityInchesRight) {
@@ -381,11 +383,15 @@ public class MaccaDrive {
             setMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         if (error > 0.1) {
+            isGyroTurnBusy = true;
             // vR value contains a tuned constant kP = 0.004, must be tuned with hardware changes
             // TODO tune gyro turning kP
             arcadeMecanumDrive(0, 0, error * 0.004);
+        } else {
+            isGyroTurnBusy = false;
+            arcadeMecanumDrive(0, 0, 0);
         }
-        arcadeMecanumDrive(0, 0, 0);
+
     }
 
     /**

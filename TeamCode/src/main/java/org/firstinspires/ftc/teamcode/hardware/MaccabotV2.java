@@ -8,7 +8,7 @@ public class MaccabotV2 {
     //private HardwareMap hardwareMap;
 
     public MaccaDrive drive;
-    public MaccaIntake intake;
+    public MaccaSucc intake;
     public MaccaLift lift;
 
     public MaccabotV2(OpMode parentOpMode) {
@@ -22,7 +22,7 @@ public class MaccabotV2 {
         drive = new MaccaDrive(parentOpMode);
         drive.initializeDrive(auto);
 
-        intake = new MaccaIntake(parentOpMode);
+        intake = new MaccaSucc(parentOpMode);
         intake.initializeIntake();
 
         lift = new MaccaLift(parentOpMode);
