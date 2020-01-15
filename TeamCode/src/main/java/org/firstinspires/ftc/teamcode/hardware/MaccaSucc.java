@@ -6,20 +6,20 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class MaccaIntake {
+public class MaccaSucc {
 
     private OpMode parentOpMode;
     private HardwareMap hardwareMap;
 
     private DcMotorEx intake_left, intake_right;
 
-    public MaccaIntake(OpMode parentOpMode) {
+    public MaccaSucc(OpMode parentOpMode) {
         this.parentOpMode = parentOpMode;
         this.hardwareMap = parentOpMode.hardwareMap;
     }
 
     public void initializeIntake() {
-        parentOpMode.telemetry.addLine("MaccaIntake Initializing...");
+        parentOpMode.telemetry.addLine("MaccaSucc Initializing...");
         // Find intake motors
         intake_left = hardwareMap.get(DcMotorEx.class,"intake_left");
         intake_right = hardwareMap.get(DcMotorEx.class,"intake_right");
