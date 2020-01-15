@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.hardware.MaccabotV2;
 
 @TeleOp(name="TeleOp v2")
-//@Disabled
+//@Disable
 public class TeleOpV2 extends OpMode {
 
     private MaccabotV2 robot;
