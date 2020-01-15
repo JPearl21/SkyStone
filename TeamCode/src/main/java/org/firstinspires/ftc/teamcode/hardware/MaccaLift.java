@@ -49,8 +49,9 @@ public class MaccaLift {
     }
 
     public void runLift(double rate){
+
         liftTargetPos += 25*rate;
-        liftTargetPos -= 25*rate;
+
         // Limit clauses
         if (liftTargetPos >= 2020) {
             liftTargetPos = 2020;
@@ -78,9 +79,9 @@ public class MaccaLift {
         if (open && closed) {
             chad.setPosition(chad.getPosition());
         } else if (closed) {
-            chad.setPosition(0.15);
+            chad.setPosition(0.45);
         } else if (open) {
-            chad.setPosition(0.23);
+            chad.setPosition(0.55);
         }
     }
 
