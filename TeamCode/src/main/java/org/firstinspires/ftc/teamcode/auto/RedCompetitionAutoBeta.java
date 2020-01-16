@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.concept;
+package org.firstinspires.ftc.teamcode.auto;
 
 import android.media.MediaPlayer;
 
@@ -10,9 +10,9 @@ import org.firstinspires.ftc.teamcode.R;
 import org.firstinspires.ftc.teamcode.hardware.MaccaDrive;
 import org.firstinspires.ftc.teamcode.hardware.MaccabotV2;
 
-@Autonomous(name="ConceptMaccaDriveAuto")
+@Autonomous(name="NEEDHAM AUTO RED")
 //@Disabled
-public class ConceptMaccaDriveAuto extends LinearOpMode {
+public class RedCompetitionAutoBeta extends LinearOpMode {
 
     private MaccabotV2 robot;
     private ElapsedTime timer;
@@ -40,6 +40,8 @@ public class ConceptMaccaDriveAuto extends LinearOpMode {
         robot.drive.composeTelemetry(MaccaDrive.TelemetryLevel.FULL);
         telemetry.update();
 
+
+        // FORWARD MOVE
         robot.drive.setTargetsTicks(MaccaDrive.inchesToEncoderTicks(24), MaccaDrive.inchesToEncoderTicks(24));
         timer.reset();
         robot.drive.runToTargets(0.9, 0.9);
@@ -48,6 +50,8 @@ public class ConceptMaccaDriveAuto extends LinearOpMode {
         }
         robot.drive.setMotorPowers(0);
 
+
+        // RIGHT TURN
         robot.drive.setTargetsTicks(MaccaDrive.inchesToEncoderTicks((13.75 * 2 * Math.PI) / 4),
                                     -MaccaDrive.inchesToEncoderTicks((13.75 * 2 * Math.PI) / 4));
         timer.reset();
