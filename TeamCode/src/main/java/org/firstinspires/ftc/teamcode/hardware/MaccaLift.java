@@ -17,7 +17,7 @@ public class MaccaLift {
     private OpMode parentOpMode;
     private HardwareMap hardwareMap;
 
-    private DcMotorEx lift_left, lift_right;
+    private DcMotor lift_left, lift_right;
     private CRServo rack;
     private Servo chad;
     private double liftTargetPos;
@@ -49,8 +49,9 @@ public class MaccaLift {
     }
 
     public void runLift(double rate){
+
         liftTargetPos += 25*rate;
-        liftTargetPos -= 25*rate;
+
         // Limit clauses
         if (liftTargetPos >= 2020) {
             liftTargetPos = 2020;
@@ -65,6 +66,9 @@ public class MaccaLift {
         double error = desiredPosition - getLiftPosition();
         lift_right.setPower(kP*error);
         lift_left.setPower(kP*error);
+
+        parentOpMode.telemetry.addData("lift power", kP*error) ;
+        parentOpMode.telemetry.update();
     }
 
     public void runRack(double rate) {
@@ -75,9 +79,9 @@ public class MaccaLift {
         if (open && closed) {
             chad.setPosition(chad.getPosition());
         } else if (closed) {
-            chad.setPosition(0);
+            chad.setPosition(0.45);
         } else if (open) {
-            chad.setPosition(1);
+            chad.setPosition(0.55);
         }
     }
 
