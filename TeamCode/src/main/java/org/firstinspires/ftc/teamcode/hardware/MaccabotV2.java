@@ -10,6 +10,7 @@ public class MaccabotV2 {
     public MaccaDrive drive;
     public MaccaSucc intake;
     public MaccaLift lift;
+    public MaccaClaw autoClaw;
 
     public MaccabotV2(OpMode parentOpMode) {
         this.parentOpMode = parentOpMode;
@@ -27,6 +28,9 @@ public class MaccabotV2 {
 
         lift = new MaccaLift(parentOpMode);
         lift.initializeLift();
+
+        autoClaw = new MaccaClaw(parentOpMode);
+        autoClaw.initializeClaw();
 
         parentOpMode.telemetry.addLine("Initialization Complete.");
     }
